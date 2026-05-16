@@ -22,17 +22,41 @@ class GasStation extends Model
         'longitude',
         'station_code',
         'is_active',
+        'is_open',
+        'phone',
+        'rating',
+        'rating_count',
+        'services',
         'created_at',
     ];
+
+    // حقول محسوبة للتوافق مع Flutter
+    protected $appends = ['name', 'address'];
 
     protected function casts(): array
     {
         return [
-            'latitude' => 'decimal:8',
-            'longitude' => 'decimal:8',
-            'is_active' => 'boolean',
-            'created_at' => 'datetime',
+            'latitude'     => 'decimal:8',
+            'longitude'    => 'decimal:8',
+            'is_active'    => 'boolean',
+            'is_open'      => 'boolean',
+            'rating'       => 'float',
+            'rating_count' => 'integer',
+            'services'     => 'array',
+            'created_at'   => 'datetime',
         ];
+    }
+
+    // Accessor: name ← Flutter يتوقع "name" بدلاً من "station_name"
+    public function getNameAttribute(): string
+    {
+        return $this->station_name ?? '';
+    }
+
+    // Accessor: address ← Flutter يتوقع "address" بدلاً من "location"
+    public function getAddressAttribute(): string
+    {
+        return $this->location ?? '';
     }
 
     public function owner()

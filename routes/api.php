@@ -124,6 +124,9 @@ Route::prefix('user')->middleware('auth:sanctum')->group(function (): void {
     Route::get('/history/maintenance', [UserController::class, 'maintenance']);
     Route::get('/qr-codes', [UserController::class, 'qrCodes']);
     Route::post('/qr-codes/generate', [UserController::class, 'generateQrCode']);
+    Route::post('/stations/rate', [UserController::class, 'rateStation']);
+    Route::get('/payments/methods', [UserController::class, 'paymentMethods']);
+    Route::post('/payments/process', [UserController::class, 'processPayment']);
     Route::post('/tickets', [UserController::class, 'createTicket']);
     Route::get('/notifications', [UserController::class, 'notifications']);
     Route::get('/{userId}', [UserController::class, 'show']);

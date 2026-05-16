@@ -20,6 +20,7 @@ class User extends Authenticatable
         'engine_number',
         'user_role',
         'qr_code',
+        'avatar',
         'is_active',
         'phone_verified',
         'two_factor_enabled',
@@ -29,11 +30,20 @@ class User extends Authenticatable
         'last_location_update',
     ];
 
+    // حقول محسوبة للتوافق مع Flutter
+    protected $appends = ['name'];
+
     protected $hidden = [
         'password_hash',
     ];
 
     public $timestamps = false;
+
+    // Accessor: name ← Flutter يتوقع 'name' بدلاً من 'full_name'
+    public function getNameAttribute(): string
+    {
+        return $this->full_name ?? '';
+    }
 
     protected function casts(): array
     {

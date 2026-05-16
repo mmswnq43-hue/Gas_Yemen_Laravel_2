@@ -7,7 +7,9 @@ use App\Models\CarWash;
 use App\Models\GasStation;
 use App\Models\MaintenanceService;
 use App\Models\Notification;
+use App\Models\Payment;
 use App\Models\Refuel;
+use App\Models\StationRating;
 use App\Models\Subscription;
 use App\Models\SupportTicket;
 use App\Models\User;
@@ -203,6 +205,81 @@ class UserController extends Controller
         ]);
 
         return response()->json($ticket, 201);
+    }
+
+    public function rateStation(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'station_id' => ['required', 'integer', 'exists:gas_stations,id'],
+            'rating' => ['required', 'integer', 'min:1', 'max:5'],
+            'comment' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $rating = StationRating::updateOrCreate(
+            ['user_id' => $request->user()->id, 'station_id' => $data['station_id']],
+            ['rating' => $data['rating'], 'comment' => $data['comment'], 'created_at' => now()]
+        );
+
+        // تحديث إجمالي تقييم المحطة في جدول gas_stations
+        $station = GasStation::find($data['station_id']);
+        $avgRating = StationRating::where('station_id', $data['station_id'])->avg('rating');
+        $count = StationRating::where('station_id', $data['station_id'])->count();
+        
+        $station->update([
+            'rating' => round($avgRating, 1),
+            'rating_count' => $count
+        ]);
+
+        return response()->json(['message' => 'تم إضافة تقييمك بنجاح', 'rating' => $rating]);
+    }
+
+    public function paymentMethods(): JsonResponse
+    {
+        return response()->json([
+            [
+                'id' => 'kuraimi',
+                'name' => 'بنك الكريمي (Kuraimi Bank)',
+                'logo' => 'assets/images/kuraimi.png',
+                'description' => 'الدفع المباشر عبر تطبيق الكريمي',
+            ],
+            [
+                'id' => 'al_najm',
+                'name' => 'النجم للصرافة (Al-Najm)',
+                'logo' => 'assets/images/al_najm.png',
+                'description' => 'عبر شبكة النجم للحوالات',
+            ],
+            [
+                'id' => 'm_pesa',
+                'name' => 'إم بيسا (M-Pesa)',
+                'logo' => 'assets/images/m_pesa.png',
+                'description' => 'الدفع عبر الهاتف المحمول',
+            ],
+        ]);
+    }
+
+    public function processPayment(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'payment_method' => ['required', 'string'],
+            'amount' => ['required', 'numeric'],
+            'payment_for' => ['required', 'string'],
+            'related_id' => ['nullable', 'integer'],
+        ]);
+
+        $payment = Payment::create([
+            'user_id' => $request->user()->id,
+            'payment_method' => $data['payment_method'],
+            'amount' => $data['amount'],
+            'payment_for' => $data['payment_for'],
+            'related_id' => $data['related_id'],
+            'status' => 'pending',
+            'created_at' => now(),
+        ]);
+
+        return response()->json([
+            'message' => 'تم إنشاء طلب الدفع بنجاح، بانتظار التأكيد',
+            'payment' => $payment
+        ], 201);
     }
 
     public function notifications(Request $request): JsonResponse

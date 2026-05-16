@@ -33,14 +33,10 @@ class StationController extends Controller
 
             $distance = $this->geo->distanceKm((float) $data['lat'], (float) $data['lon'], (float) $station->latitude, (float) $station->longitude);
             if ($distance <= $radius) {
-                $nearby[] = [
-                    'id' => $station->id,
-                    'station_name' => $station->station_name,
-                    'location' => $station->location,
-                    'distance_km' => round($distance, 2),
-                    'latitude' => (float) $station->latitude,
-                    'longitude' => (float) $station->longitude,
-                ];
+                // دمج بيانات المحطة مع المسافة المحسوبة
+                $stationData = $station->toArray();
+                $stationData['distance_km'] = round($distance, 2);
+                $nearby[] = $stationData;
             }
         }
 

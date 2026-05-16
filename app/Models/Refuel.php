@@ -21,10 +21,18 @@ class Refuel extends Model
         'total_before_discount',
         'discount_amount',
         'final_price',
+        'status',
+        'fuel_type',
         'qr_code_used',
         'refuel_date',
         'created_at',
     ];
+
+    // eager load station مع كل refuel تلقائياً
+    protected $with = ['station'];
+
+    // حقول محسوبة للتوافق مع Flutter
+    protected $appends = ['station_name', 'amount', 'date'];
 
     protected function casts(): array
     {
@@ -37,6 +45,24 @@ class Refuel extends Model
             'refuel_date' => 'datetime',
             'created_at' => 'datetime',
         ];
+    }
+
+    // Accessor: station_name ← متوافق مع Flutter
+    public function getStationNameAttribute(): string
+    {
+        return $this->station?->station_name ?? '';
+    }
+
+    // Accessor: amount ← Flutter يتوقع "amount" بدلاً من "final_price"
+    public function getAmountAttribute(): float
+    {
+        return (float) $this->final_price;
+    }
+
+    // Accessor: date ← Flutter يتوقع "date" بدلاً من "refuel_date"
+    public function getDateAttribute(): ?string
+    {
+        return $this->refuel_date?->toIso8601String();
     }
 
     public function user()
