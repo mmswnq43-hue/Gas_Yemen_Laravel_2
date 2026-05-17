@@ -16,8 +16,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        \Dedoc\Scramble\Scramble::auth(function ($request) {
-            // Allows everyone to access API documentation in production
+        \Illuminate\Support\Facades\Gate::define('viewApiDocs', function ($user = null) {
+            // Allows everyone (including guests) to access API documentation in production
             return true;
         });
     }
